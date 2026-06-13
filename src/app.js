@@ -7,12 +7,13 @@ import postRoutes from './routes/posts.js';
 
 const app = express();
 
+// Enable Global CORS with Preflight Support
+app.use(cors());
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Enable Global CORS with Preflight Support
-app.use(cors());
 
 // Routes
 app.use('/api/auth', authRoutes);
