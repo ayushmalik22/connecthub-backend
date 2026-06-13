@@ -8,7 +8,13 @@ import postRoutes from './routes/posts.js';
 const app = express();
 
 // Enable Global CORS with Preflight Support
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allows access from any origin (including your local frontend)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 204 // Intercepts preflight requests and replies instantly
+}));
 
 // Middleware
 app.use(express.json());
