@@ -394,9 +394,13 @@ export const createComment = async (req, res) => {
     post.comments.push(newComment);
     await post.save();
 
+    await post.populate({
+      path: 'comments.user',
+      select: 'username avatarUrl'
+    });
+
     // Get the newly added comment (last one in array)
     const addedComment = post.comments[post.comments.length - 1];
-    await addedComment.populate('user', 'username avatarUrl');
 
     res.status(201).json({
       success: true,
