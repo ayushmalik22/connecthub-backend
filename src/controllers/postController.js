@@ -324,3 +324,149 @@ export const updatePost = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get all comments for a post
+ * GET /api/posts/:id/comments
+ */
+export const getComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findById(id).populate('comments.user', 'username avatarUrl');
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: post.comments,
+      count: post.comments.length,
+    });
+  } catch (error) {
+    console.error('Error fetching comments:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching comments',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Create a new comment on a post
+ * POST /api/posts/:id/comment
+ */
+export const createComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const userId = req.user.id;
+
+    // Validation
+    if (!content || content.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Comment content is required',
+      });
+    }
+
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found',
+      });
+    }
+
+    // Add new comment
+    const newComment = {
+      user: userId,
+      content: content.trim(),
+      createdAt: new Date(),
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    // Get the newly added comment (last one in array)
+    const addedComment = post.comments[post.comments.length - 1];
+    await addedComment.populate('user', 'username avatarUrl');
+
+    res.status(201).json({
+      success: true,
+      message: 'Comment created successfully',
+      data: addedComment,
+    });
+  } catch (error) {
+    console.error('Error creating comment:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating comment',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Delete a comment from a post
+ * DELETE /api/posts/:id/comments/:commentId
+ */
+export const deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const userId = req.user.id;
+
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found',
+      });
+    }
+
+    // Find the comment
+    const commentIndex = post.comments.findIndex(
+      (comment) => comment._id.toString() === commentId
+    );
+
+    if (commentIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comment not found',
+      });
+    }
+
+    const comment = post.comments[commentIndex];
+
+    // Check if user is the comment author or post owner
+    if (comment.user.toString() !== userId && post.user.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own comments or comments on your posts',
+      });
+    }
+
+    // Remove the comment
+    post.comments.splice(commentIndex, 1);
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Comment deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting comment:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting comment',
+      error: error.message,
+    });
+  }
+};

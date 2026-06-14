@@ -8,6 +8,9 @@ import {
   likePost,
   deletePost,
   updatePost,
+  getComments,
+  createComment,
+  deleteComment,
 } from '../controllers/postController.js';
 import authMiddleware from '../middleware/auth.js';
 import { upload } from '../utils/cloudinary.js';
@@ -64,5 +67,23 @@ router.put('/:id', updatePost);
  * Delete a post (only by author)
  */
 router.delete('/:id', deletePost);
+
+/**
+ * GET /api/posts/:id/comments
+ * Get all comments for a post
+ */
+router.get('/:id/comments', getComments);
+
+/**
+ * POST /api/posts/:id/comment
+ * Create a new comment on a post
+ */
+router.post('/:id/comment', createComment);
+
+/**
+ * DELETE /api/posts/:id/comments/:commentId
+ * Delete a comment from a post
+ */
+router.delete('/:id/comments/:commentId', deleteComment);
 
 export default router;

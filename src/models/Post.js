@@ -30,6 +30,24 @@ const postSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    comments: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: [true, 'Comment must belong to a user'],
+        },
+        content: {
+          type: String,
+          required: [true, 'Comment content is required'],
+          trim: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
