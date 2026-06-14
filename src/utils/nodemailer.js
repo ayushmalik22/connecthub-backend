@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-// Create transporter using environment variables
+// Create transporter using environment variables with timeout configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -8,6 +8,10 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    // Add timeout configuration to prevent indefinite hanging
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 5000, // 5 seconds
+    socketTimeout: 10000, // 10 seconds
   });
 };
 

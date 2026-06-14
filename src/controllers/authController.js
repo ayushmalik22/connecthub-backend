@@ -61,8 +61,19 @@ export const sendOTP = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Send OTP via email
-    await sendOTPEmail(email, otpCode);
+    // Send OTP via email with timeout protection
+    try {
+      await Promise.race([
+        sendOTPEmail(email, otpCode),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 15000)
+        )
+      ]);
+    } catch (emailError) {
+      console.error('Email sending failed or timed out:', emailError.message);
+      // Continue anyway - OTP is saved in database, user can request again if needed
+      // Don't fail the entire request just because email failed
+    }
 
     res.status(200).json({
       success: true,
