@@ -3,9 +3,9 @@ import nodemailer from 'nodemailer';
 // Create transporter using environment variables with timeout configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: '74.125.130.108',
-    port: 465,
-    secure: true,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     family: 4,
     auth: {
       user: process.env.EMAIL_USER,
@@ -16,7 +16,8 @@ const createTransporter = () => {
     greetingTimeout: 5000, // 5 seconds
     socketTimeout: 10000, // 10 seconds
     tls: {
-      servername: 'smtp.gmail.com'
+      ciphers: 'SSLv3',
+      rejectUnauthorized: false
     }
   });
 };
