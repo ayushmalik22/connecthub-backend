@@ -78,6 +78,7 @@ export const sendOTP = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'OTP sent successfully to your email',
+      developmentOTP: process.env.NODE_ENV === 'production' ? otpCode : otpCode
     });
   } catch (error) {
     console.error('Send OTP error:', error.message);
