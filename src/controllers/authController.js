@@ -71,15 +71,20 @@ export const sendOTP = async (req, res) => {
       ]);
     } catch (emailError) {
       console.error('Email sending failed or timed out:', emailError.message);
-      // Continue anyway - OTP is saved in database, user can request again if needed
-      // Don't fail the entire request just because email failed
     }
 
-    res.status(200).json({
+    // Build responsive payload
+    const responsePayload = {
       success: true,
-      message: 'OTP sent successfully to your email',
-      developmentOTP: process.env.NODE_ENV === 'production' ? otpCode : otpCode
-    });
+      message: 'OTP processed successfully',
+    };
+
+    // 🛡️ Only expose the code if we are NOT running in a strict live production profile
+    if (process.env.NODE_ENV !== 'production') {
+      responsePayload.developmentOTP = otpCode;
+    }
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Send OTP error:', error.message);
     res.status(500).json({
@@ -324,13 +329,29 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    // Send reset email
-    await sendPasswordResetEmail(user.email, resetToken);
+    // Send reset email with firewall protection wrapper
+    try {
+      await Promise.race([
+        sendPasswordResetEmail(user.email, resetToken),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 15000)
+        )
+      ]);
+    } catch (emailError) {
+      console.error('Password reset email blocked or timed out:', emailError.message);
+    }
 
-    res.status(200).json({
+    const responsePayload = {
       success: true,
-      message: 'Password reset email sent successfully',
-    });
+      message: 'Password reset link compiled successfully',
+    };
+
+    // Return the token in non-production mode so you can build recovery UI easily
+    if (process.env.NODE_ENV !== 'production') {
+      responsePayload.developmentResetToken = resetToken;
+    }
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Forgot password error:', error.message);
     res.status(500).json({
